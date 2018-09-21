@@ -15,6 +15,7 @@
 		638E277F1FEF3FE500C2DE06 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 638E277D1FEF3FE500C2DE06 /* Main.storyboard */; };
 		638E27811FEF3FE500C2DE06 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 638E27801FEF3FE500C2DE06 /* Assets.xcassets */; };
 		638E27841FEF3FE500C2DE06 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 638E27821FEF3FE500C2DE06 /* LaunchScreen.storyboard */; };
+		7D7902C321557D1C000A2BEE /* ball.scn in Resources */ = {isa = PBXBuildFile; fileRef = 7D7902C221557D1C000A2BEE /* ball.scn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		638E27801FEF3FE500C2DE06 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		638E27831FEF3FE500C2DE06 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		638E27851FEF3FE500C2DE06 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7D7902C221557D1C000A2BEE /* ball.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = ball.scn; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				63105EC11FF0AF5B0039D35F /* rocketship.scn */,
+				7D7902C221557D1C000A2BEE /* ball.scn */,
 			);
 			path = "3D Models";
 			sourceTree = "<group>";
@@ -149,6 +152,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				638E27841FEF3FE500C2DE06 /* LaunchScreen.storyboard in Resources */,
+				7D7902C321557D1C000A2BEE /* ball.scn in Resources */,
 				638E27811FEF3FE500C2DE06 /* Assets.xcassets in Resources */,
 				638E277F1FEF3FE500C2DE06 /* Main.storyboard in Resources */,
 				63105ECA1FF12A200039D35F /* spark.png in Resources */,
@@ -303,10 +307,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = YZP52RND5S;
+				DEVELOPMENT_TEAM = W7K9Q4Z2Y3;
 				INFOPLIST_FILE = ARKitPhysics/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.appcoda.app.ARKitPhysics;
+				PRODUCT_BUNDLE_IDENTIFIER = com.FeenyCorp.ARKitPhysics;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -318,10 +322,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = YZP52RND5S;
+				DEVELOPMENT_TEAM = W7K9Q4Z2Y3;
 				INFOPLIST_FILE = ARKitPhysics/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.appcoda.app.ARKitPhysics;
+				PRODUCT_BUNDLE_IDENTIFIER = com.FeenyCorp.ARKitPhysics;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

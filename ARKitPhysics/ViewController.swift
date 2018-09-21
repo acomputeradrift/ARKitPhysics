@@ -14,9 +14,13 @@ class ViewController: UIViewController {
     @IBOutlet weak var sceneView: ARSCNView!
     
     var planeNodes = [SCNNode]()
+    var longPressGestureRecognizer = UILongPressGestureRecognizer()
+    var tapGestureRecognizer = UITapGestureRecognizer()
+    var ballNode : SCNNode!
     
     // TODO: Declare rocketship node name constant
-    let rocketshipNodeName = "rocketship"
+    let ballNodeName =  "ball"
+   // let golfBallNodeName = "golfball"
     
     // TODO: Initialize an empty array of type SCNNode
     
@@ -24,7 +28,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         addTapGestureToSceneView()
         configureLighting()
-        addSwipeGesturesToSceneView()
+        addLongPressGesturesToSceneView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -52,93 +56,83 @@ class ViewController: UIViewController {
     }
     
     func addTapGestureToSceneView() {
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.addRocketshipToSceneView(withGestureRecognizer:)))
-        sceneView.addGestureRecognizer(tapGestureRecognizer)
+        self.tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.addBallToSceneView(withGestureRecognizer:)))
+        sceneView.addGestureRecognizer(self.tapGestureRecognizer)
     }
     
+    
+    
     // TODO: Create add swipe gestures to scene view method
-    func addSwipeGesturesToSceneView() {
-        let swipeUpGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(ViewController.applyForceToRocketship(withGestureRecognizer:)))
-        swipeUpGestureRecognizer.direction = .up
-        sceneView.addGestureRecognizer(swipeUpGestureRecognizer)
-        
-        let swipeDownGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(ViewController.launchRocketship(withGestureRecognizer:)))
-        swipeDownGestureRecognizer.direction = .down
-        sceneView.addGestureRecognizer(swipeDownGestureRecognizer)
-    }
+    func addLongPressGesturesToSceneView() {
 
-    @objc func addRocketshipToSceneView(withGestureRecognizer recognizer: UIGestureRecognizer) {
+        self.longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(ViewController.applyForceToBall(withGestureRecognizer:)))
+        self.longPressGestureRecognizer.minimumPressDuration = 0.5
+        sceneView.addGestureRecognizer(self.longPressGestureRecognizer)
+    }
+    
+    //******************************************************************* Add scene **********************************
+
+    @objc func addBallToSceneView(withGestureRecognizer recognizer: UIGestureRecognizer) {
         let tapLocation = recognizer.location(in: sceneView)
         let hitTestResults = sceneView.hitTest(tapLocation, types: .existingPlaneUsingExtent)
         guard let hitTestResult = hitTestResults.first else { return }
-        
+
         let translation = hitTestResult.worldTransform.translation
         let x = translation.x
         let y = translation.y + 0.1
         let z = translation.z
+
+         let golfScene = SCNScene(named: "ball.scn")
+            ballNode  = golfScene!.rootNode.childNode(withName: "ball", recursively: false)
+//            else { return }
+
+        ballNode.position = SCNVector3(x,y,z)
         
-        guard let rocketshipScene = SCNScene(named: "rocketship.scn"),
-            let rocketshipNode = rocketshipScene.rootNode.childNode(withName: "rocketship", recursively: false)
-            else { return }
         
-        rocketshipNode.position = SCNVector3(x,y,z)
-        
-        // TODO: Attach physics body to rocketship node
-        let physicsBody = SCNPhysicsBody(type: .dynamic, shape: nil)
-        rocketshipNode.physicsBody = physicsBody
-        rocketshipNode.name = rocketshipNodeName
-        
-        sceneView.scene.rootNode.addChildNode(rocketshipNode)
+//This will test the force on the ball
+//        guard let physicsBody = ballNode.physicsBody
+//        else { return }
+//        // 4
+//        let direction = SCNVector3(0, 0 , -1)
+//        physicsBody.applyForce(direction, asImpulse: true)
+//
+        ballNode.name = ballNodeName
+        sceneView.scene.rootNode.addChildNode(ballNode)
     }
     
-    // TODO: Create get rocketship node from swipe location method
-    func getRocketshipNode(from swipeLocation: CGPoint) -> SCNNode? {
-        let hitTestResults = sceneView.hitTest(swipeLocation)
-        guard let parentNode = hitTestResults.first?.node.parent,
-            parentNode.name == rocketshipNodeName
+    //*********************************************************************** create rocketship node ****************************
+    
+    // TODO: Get ball node from long press location method
+    func getBallNode(from longPressLocation: CGPoint) -> SCNNode? {
+        let hitTestResults = sceneView.hitTest(longPressLocation)
+        print("Got location")
+        guard let parentNode : SCNNode = hitTestResults.first?.node.parent,
+            parentNode == ballNode
             else { return nil }
+        
+        dump(parentNode)
+        print("Got parent node")
         return parentNode
     }
     
-    // TODO: Create apply force to rocketship method
-    @objc func applyForceToRocketship(withGestureRecognizer recognizer: UIGestureRecognizer) {
+    //*******************************************************************************************************************************
+
+    // TODO: Apply force to ball method
+    @objc func applyForceToBall(withGestureRecognizer recognizer: UIGestureRecognizer) {
         // 1
-        guard recognizer.state == .ended else { return }
-        // 2
-        let swipeLocation = recognizer.location(in: sceneView)
+        print("Got the long press")
+        let longPressLocation = recognizer.location(in: sceneView)
         // 3
-        guard let rocketshipNode = getRocketshipNode(from: swipeLocation),
-            let physicsBody = rocketshipNode.physicsBody
+        guard let ballNode = getBallNode(from: longPressLocation),
+            let physicsBody = ballNode.physicsBody
             else { return }
         // 4
-        let direction = SCNVector3(0, 3, 0)
+        let direction = SCNVector3(0, 0, -1)
         physicsBody.applyForce(direction, asImpulse: true)
     }
-    
-    // TODO: Create launch rocketship method
-    @objc func launchRocketship(withGestureRecognizer recognizer: UIGestureRecognizer) {
-        // 1
-        guard recognizer.state == .ended else { return }
-        // 2
-        let swipeLocation = recognizer.location(in: sceneView)
-        guard let rocketshipNode = getRocketshipNode(from: swipeLocation),
-            let physicsBody = rocketshipNode.physicsBody,
-            let reactorParticleSystem = SCNParticleSystem(named: "reactor", inDirectory: nil),
-            let engineNode = rocketshipNode.childNode(withName: "node2", recursively: false)
-            else { return }
-        // 3
-        physicsBody.isAffectedByGravity = false
-        physicsBody.damping = 0
-        // 4
-        reactorParticleSystem.colliderNodes = planeNodes
-        // 5
-        engineNode.addParticleSystem(reactorParticleSystem)
-        // 6
-        let action = SCNAction.moveBy(x: 0, y: 0.3, z: 0, duration: 3)
-        action.timingMode = .easeInEaseOut
-        rocketshipNode.runAction(action)
-    }
 }
+
+//****************************************************************************** Plane Detection ************************************
 
 extension ViewController: ARSCNViewDelegate {
     
@@ -148,6 +142,8 @@ extension ViewController: ARSCNViewDelegate {
         let width = CGFloat(planeAnchor.extent.x)
         let height = CGFloat(planeAnchor.extent.z)
         let plane = SCNPlane(width: width, height: height)
+        
+        //MARK: - this is where the plane detection happens
         
         plane.materials.first?.diffuse.contents = UIColor.transparentWhite
         
