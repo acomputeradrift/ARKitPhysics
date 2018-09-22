@@ -105,30 +105,34 @@ class ViewController: UIViewController {
     // TODO: Get ball node from long press location method
     func getBallNode(from longPressLocation: CGPoint) -> SCNNode? {
         let hitTestResults = sceneView.hitTest(longPressLocation)
-        print("Got location")
-        guard let parentNode : SCNNode = hitTestResults.first?.node.parent,
-            parentNode == ballNode
+        guard let parentNode  = hitTestResults.first?.node.parent
             else { return nil }
-        
-        dump(parentNode)
-        print("Got parent node")
-        return parentNode
+        for child in parentNode.childNodes {
+            if child.name == "ball" {
+                return child
+            }
+        }
+        return nil
     }
     
     //*******************************************************************************************************************************
 
     // TODO: Apply force to ball method
+    
     @objc func applyForceToBall(withGestureRecognizer recognizer: UIGestureRecognizer) {
-        // 1
-        print("Got the long press")
-        let longPressLocation = recognizer.location(in: sceneView)
-        // 3
+        let longPressLocation = recognizer.location(in: self.view)
         guard let ballNode = getBallNode(from: longPressLocation),
             let physicsBody = ballNode.physicsBody
             else { return }
-        // 4
         let direction = SCNVector3(0, 0, -1)
         physicsBody.applyForce(direction, asImpulse: true)
+        
+//        let original = SCNVector3(x: 1.67, y: 13.83, z: -18.3)
+//        let force = simd_make_float4(original.x, original.y, original.z, 0)
+//        let rotatedForce = simd_mul(currentFrame.camera.transform, force)
+//        
+//        let vectorForce = SCNVector3(x:rotatedForce.x, y:rotatedForce.y, z:rotatedForce.z)
+        //node.physicsBody?.applyForce(vectorForce, asImpulse: true)
     }
 }
 
