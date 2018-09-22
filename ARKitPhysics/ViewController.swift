@@ -8,6 +8,7 @@
 
 import UIKit
 import ARKit
+import SceneKit
 
 class ViewController: UIViewController {
 
@@ -17,6 +18,7 @@ class ViewController: UIViewController {
     var longPressGestureRecognizer = UILongPressGestureRecognizer()
     var tapGestureRecognizer = UITapGestureRecognizer()
     var ballNode : SCNNode!
+    var ballExists = false
     
     // TODO: Declare rocketship node name constant
     let ballNodeName =  "ball"
@@ -62,47 +64,38 @@ class ViewController: UIViewController {
     
     
     
-    // TODO: Create add swipe gestures to scene view method
+    // Add swipe gestures to scene view method
     func addLongPressGesturesToSceneView() {
-
         self.longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(ViewController.applyForceToBall(withGestureRecognizer:)))
         self.longPressGestureRecognizer.minimumPressDuration = 0.5
         sceneView.addGestureRecognizer(self.longPressGestureRecognizer)
     }
     
-    //******************************************************************* Add scene **********************************
+    //******************************************************************* Add ball node to scene **********************************
 
     @objc func addBallToSceneView(withGestureRecognizer recognizer: UIGestureRecognizer) {
-        let tapLocation = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(tapLocation, types: .existingPlaneUsingExtent)
-        guard let hitTestResult = hitTestResults.first else { return }
+        if ballExists == false {
+            let pressLocation = recognizer.location(in: sceneView)
+            let hitTestResults = sceneView.hitTest(pressLocation, types: .existingPlaneUsingExtent)
+            guard let hitTestResult = hitTestResults.first else { return }
+            
+            let translation = hitTestResult.worldTransform.translation
+            let x = translation.x
+            let y = translation.y + 0.1
+            let z = translation.z
 
-        let translation = hitTestResult.worldTransform.translation
-        let x = translation.x
-        let y = translation.y + 0.1
-        let z = translation.z
-
-         let golfScene = SCNScene(named: "ball.scn")
-            ballNode  = golfScene!.rootNode.childNode(withName: "ball", recursively: false)
-//            else { return }
-
-        ballNode.position = SCNVector3(x,y,z)
-        
-        
-//This will test the force on the ball
-//        guard let physicsBody = ballNode.physicsBody
-//        else { return }
-//        // 4
-//        let direction = SCNVector3(0, 0 , -1)
-//        physicsBody.applyForce(direction, asImpulse: true)
-//
-        ballNode.name = ballNodeName
-        sceneView.scene.rootNode.addChildNode(ballNode)
+            let ballScene = SCNScene(named: "ball.scn")
+            ballNode  = ballScene!.rootNode.childNode(withName: "ball", recursively: false)
+            ballNode.position = SCNVector3(x,y,z)
+            ballNode.name = ballNodeName
+            sceneView.scene.rootNode.addChildNode(ballNode)
+            ballExists = true
+        }
     }
     
-    //*********************************************************************** create rocketship node ****************************
+    //*********************************************************************** get location of ball node ****************************
     
-    // TODO: Get ball node from long press location method
+    // Get ball node from long press location method
     func getBallNode(from longPressLocation: CGPoint) -> SCNNode? {
         let hitTestResults = sceneView.hitTest(longPressLocation)
         guard let parentNode  = hitTestResults.first?.node.parent
@@ -115,24 +108,32 @@ class ViewController: UIViewController {
         return nil
     }
     
-    //*******************************************************************************************************************************
+    //*************************************************************************** direction and force for ball path *********************************
+    
+    // Get user vector
+    
+    func getUserVector() -> (SCNVector3) { // (direction, position)
+        if let frame = self.sceneView.session.currentFrame {
+            let mat = SCNMatrix4(frame.camera.transform) // 4x4 transform matrix describing camera in world space
+            let dir = SCNVector3(-1 * mat.m31, -1 * mat.m32, -1 * mat.m33) // orientation of camera in world space
+            //let pos = SCNVector3(mat.m41, mat.m42, mat.m43) // location of camera in world space
+            
+            return (dir)
+        }
+        return (SCNVector3(0, 0, -1))
+    }
 
-    // TODO: Apply force to ball method
+    //Apply force to ball method
     
     @objc func applyForceToBall(withGestureRecognizer recognizer: UIGestureRecognizer) {
         let longPressLocation = recognizer.location(in: self.view)
         guard let ballNode = getBallNode(from: longPressLocation),
             let physicsBody = ballNode.physicsBody
             else { return }
-        let direction = SCNVector3(0, 0, -1)
+        var direction = self.getUserVector()
+        print(direction)
+        direction.y = 0
         physicsBody.applyForce(direction, asImpulse: true)
-        
-//        let original = SCNVector3(x: 1.67, y: 13.83, z: -18.3)
-//        let force = simd_make_float4(original.x, original.y, original.z, 0)
-//        let rotatedForce = simd_mul(currentFrame.camera.transform, force)
-//        
-//        let vectorForce = SCNVector3(x:rotatedForce.x, y:rotatedForce.y, z:rotatedForce.z)
-        //node.physicsBody?.applyForce(vectorForce, asImpulse: true)
     }
 }
 
