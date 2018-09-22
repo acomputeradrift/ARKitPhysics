@@ -10,7 +10,7 @@ import UIKit
 import ARKit
 import SceneKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UIGestureRecognizerDelegate {
 
     @IBOutlet weak var sceneView: ARSCNView!
     
@@ -19,6 +19,10 @@ class ViewController: UIViewController {
     var tapGestureRecognizer = UITapGestureRecognizer()
     var ballNode : SCNNode!
     var ballExists = false
+    var pressStartTime:Date?
+    var timeSinceLastHaptic: Date?
+    let lightFeedback = UIImpactFeedbackGenerator(style: .light)
+    var hapticsInterval = Float()
     
     // TODO: Declare rocketship node name constant
     let ballNodeName =  "ball"
@@ -64,7 +68,7 @@ class ViewController: UIViewController {
     
     
     
-    // Add swipe gestures to scene view method
+    // Add long press gestures to scene view method
     func addLongPressGesturesToSceneView() {
         self.longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(ViewController.applyForceToBall(withGestureRecognizer:)))
         self.longPressGestureRecognizer.minimumPressDuration = 0.5
@@ -75,8 +79,8 @@ class ViewController: UIViewController {
 
     @objc func addBallToSceneView(withGestureRecognizer recognizer: UIGestureRecognizer) {
         if ballExists == false {
-            let pressLocation = recognizer.location(in: sceneView)
-            let hitTestResults = sceneView.hitTest(pressLocation, types: .existingPlaneUsingExtent)
+            let tapLocation = recognizer.location(in: sceneView)
+            let hitTestResults = sceneView.hitTest(tapLocation, types: .existingPlaneUsingExtent)
             guard let hitTestResult = hitTestResults.first else { return }
             
             let translation = hitTestResult.worldTransform.translation
@@ -112,13 +116,13 @@ class ViewController: UIViewController {
     
     // Get user vector
     
-    func getUserVector() -> (SCNVector3) { // (direction, position)
+    func getUserVector() -> (SCNVector3) {
         if let frame = self.sceneView.session.currentFrame {
             let mat = SCNMatrix4(frame.camera.transform) // 4x4 transform matrix describing camera in world space
-            let dir = SCNVector3(-1 * mat.m31, -1 * mat.m32, -1 * mat.m33) // orientation of camera in world space
+            var direction = SCNVector3(-1 * mat.m31, -1 * mat.m32, -1 * mat.m33) // orientation of camera in world space
             //let pos = SCNVector3(mat.m41, mat.m42, mat.m43) // location of camera in world space
-            
-            return (dir)
+            direction.y = 0 //negate height
+            return (direction)
         }
         return (SCNVector3(0, 0, -1))
     }
@@ -126,17 +130,63 @@ class ViewController: UIViewController {
     //Apply force to ball method
     
     @objc func applyForceToBall(withGestureRecognizer recognizer: UIGestureRecognizer) {
+        if recognizer.state == UIGestureRecognizerState.began {
+            pressStartTime = Date()
+        }
         let longPressLocation = recognizer.location(in: self.view)
         guard let ballNode = getBallNode(from: longPressLocation),
             let physicsBody = ballNode.physicsBody
             else { return }
+        ballNode.geometry?.firstMaterial?.diffuse.contents = UIColor.green
         var direction = self.getUserVector()
-        print(direction)
-        direction.y = 0
+        let duration = getHoldDuration()
+        hapticsInterval = Float(getAppropriateFeedback(duration: duration))
+        
+        if recognizer.state == UIGestureRecognizerState.ended {
+        ballNode.geometry?.firstMaterial?.diffuse.contents = UIColor.white
+            let forceMultiplier = (1/hapticsInterval)
+                direction.x = direction.x * forceMultiplier
+                direction.z = direction.z * forceMultiplier
+            print (direction)
         physicsBody.applyForce(direction, asImpulse: true)
+            }
+        }
+    
+    func getHoldDuration() -> Float {
+        guard let pressStartTime = pressStartTime else {
+            print ("Timer not created")
+            return 0
+        }
+        let duration = -Float(pressStartTime.timeIntervalSinceNow)
+        return duration
+        
+    }
+    func getAppropriateFeedback(duration:Float) -> TimeInterval{
+        let interval: TimeInterval
+        switch duration {
+        case 0.5...1:
+            interval = 0.4
+        case 1...2:
+            interval = 0.2
+        case 2...:
+            interval = 0.1
+        default:
+            interval = 1.0
+        }
+        if let prevTime = timeSinceLastHaptic {
+            if Date().timeIntervalSince(prevTime) > interval {
+                lightFeedback.impactOccurred()
+                timeSinceLastHaptic = Date()
+            }
+        } else {
+            lightFeedback.impactOccurred()
+            timeSinceLastHaptic = Date()
+        }
+        return interval
     }
 }
-
+// if threshold is reached run physic....
+// if timer is nil then don't fire the physic...
 //****************************************************************************** Plane Detection ************************************
 
 extension ViewController: ARSCNViewDelegate {
